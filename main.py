@@ -40,13 +40,30 @@ for line in content:
     ycoords.append(float(line[11:21]))
     xcoords.append(float(line[23:34]))
 
+for i in range(len(timestamps)):
+    temp = timestamps[i] - int(timestamps[i])
+    temp += (int(timestamps[i]) % 100)
+    temp += ((int(timestamps[i]) // 100) % 100) * 60
+    temp += (int(timestamps[i]) // 10000) * 3600
+    timestamps[i] = temp
+
 startingPosition = [xcoords[0], ycoords[0], timestamps[0]]
 for i in range(len(timestamps)):
     xcoords[i], ycoords[i] = getXYpos(startingPosition[1] / 60., startingPosition[0] / 60.,
-                                      ycoords[i] / 60., xcoords[i] / 60)
+                                      ycoords[i] / 60., xcoords[i] / 60.)
     xcoords[i] = 0 - xcoords[i]
     timestamps[i] -= startingPosition[2]
 
+displacement = np.copy(timestamps)
+for i in range(len(timestamps)):
+    displacement[i] = np.sqrt((xcoords[0] - xcoords[i]) ** 2 +
+                              (ycoords[0] - ycoords[i]) ** 2)
+
+distance = np.copy(timestamps)
+distance[0] = 0.
+for i in range(1, len(timestamps)):
+    distance[i] = distance[i-1] + np.sqrt((xcoords[i] - xcoords[i - 1]) ** 2 +
+                                          (ycoords[i] - ycoords[i - 1]) ** 2)
 
 # timestamps = [0., 0.1, 0.2, 0.3, 0.4]
 # xcoords = [0, 1, 2, -1, -3]
@@ -122,11 +139,15 @@ specBox.grid(row=0, sticky=tk.N+tk.E+tk.S+tk.W)
 
 # text box 2 holds general info
 genBox = tk.Text(textFrame)
-genBox.insert(tk.END, "General info about the probe's expedition")
+genBox.insert(tk.END, "Distance Travelled : " + str(np.round(distance[len(timestamps) - 1], 2)) + " m")
+genBox.insert(tk.END, "\nTotal Displacement : " + str(np.round(displacement[len(timestamps) - 1], 2)) + " m")
+genBox.insert(tk.END, "\nTime Elapsed       : " + str(np.round(timestamps[len(timestamps) - 1], 2)) + " s")
 genBox.grid(row=0, column=1, sticky=tk.N+tk.E+tk.S+tk.W)
 
 
 def updateScale(sliderv):
+    specBox.delete('1.0', tk.END)
+
     _fig = plt.figure()
     _ax = _fig.add_subplot(111)
     _patch = ptch.Polygon(verts, closed=False, lw=2, fc='none', ec="black")
@@ -147,6 +168,10 @@ def updateScale(sliderv):
     mainGraph = tk.PhotoImage(file="temp1.ppm")
     image1.configure(image=mainGraph)
     plt.close()
+
+    specBox.insert(tk.END, "Distance Travelled so far : " + str(np.round(distance[index], 2)) + " m")
+    specBox.insert(tk.END, "\nDisplacement from start   : " + str(np.round(displacement[index], 2)) + " m")
+
 
 slider.configure(command=updateScale)
 
