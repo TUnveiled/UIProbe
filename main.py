@@ -1,8 +1,6 @@
 import tkinter as tk
-import matplotlib.path as pth
 import matplotlib.pyplot as plt
 import matplotlib.patches as ptch
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from PIL import Image
 import numpy as np
 
@@ -17,12 +15,44 @@ def find_nearest(array, value):
 
     return idx
 
+def getXYpos(relativelat, relativelon, platitude, plongitude):
+    """ Calculates X and Y distances in meters.
+    """
+    deltaLatitude = platitude - relativelat
+    deltaLongitude = plongitude - relativelon
+    latitudeCircumference = 40075160 * np.cos(np.radians(relativelat))
+    resultX = deltaLongitude * latitudeCircumference / 360
+    resultY = deltaLatitude * 40008000 / 360
+    return resultX, resultY
+
+timestamps = []
+xcoords = []
+ycoords = []
+R = 6371000
+
+positionFile = open("position.txt", "r")
+content = positionFile.readlines()
+counter = 0
+for line in content:
+    if len(line) < 33:
+        break
+    timestamps.append(float(line[0:9]))
+    ycoords.append(float(line[11:21]))
+    xcoords.append(float(line[23:34]))
+
+startingPosition = [xcoords[0], ycoords[0], timestamps[0]]
+for i in range(len(timestamps)):
+    xcoords[i], ycoords[i] = getXYpos(startingPosition[1] / 60., startingPosition[0] / 60.,
+                                      ycoords[i] / 60., xcoords[i] / 60)
+    xcoords[i] = 0 - xcoords[i]
+    timestamps[i] -= startingPosition[2]
+
+
+# timestamps = [0., 0.1, 0.2, 0.3, 0.4]
+# xcoords = [0, 1, 2, -1, -3]
+# ycoords = [0, 1, -2, -6, -11]
 
 root = tk.Tk()
-
-timestamps = [0., 0.1, 0.2, 0.3, 0.4]
-xcoords = [0, 1, 2, -1, -3]
-ycoords = [0, 1, -2, -6, -11]
 
 verts = np.zeros((len(xcoords), 2))
 for i in range(len(xcoords)):
