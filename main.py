@@ -15,6 +15,7 @@ def find_nearest(array, value):
 
     return idx
 
+
 def getXYpos(relativelat, relativelon, platitude, plongitude):
     """ Calculates X and Y distances in meters.
     """
@@ -48,10 +49,12 @@ for i in range(len(timestamps)):
     timestamps[i] = temp
 
 startingPosition = [xcoords[0], ycoords[0], timestamps[0]]
+print(xcoords)
 for i in range(len(timestamps)):
-    xcoords[i], ycoords[i] = getXYpos(startingPosition[1] / 60., startingPosition[0] / 60.,
-                                      ycoords[i] / 60., xcoords[i] / 60.)
+    xcoords[i], ycoords[i] = getXYpos(startingPosition[1] / 100., startingPosition[0] / 100.,
+                                      ycoords[i] / 100., xcoords[i] / 100.)
     xcoords[i] = 0 - xcoords[i]
+    print(str(xcoords[i]) + ", " + str(ycoords[i]))
     timestamps[i] -= startingPosition[2]
 
 displacement = np.copy(timestamps)
